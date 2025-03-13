@@ -49,7 +49,7 @@ class introduction(ThreeDScene):
 
 
 
-class proof(Scene):
+class Proof(Scene):
     def construct(self):
         scaling = Text("Scaling",font_size=144)
         self.play(Write(scaling))
@@ -185,13 +185,66 @@ class proof(Scene):
 
         self.play(Transform(rotation_equation4.copy(),rotation_matrix))
         self.wait(3)
+
+class Translation(Scene):
+    def construct(self):
+        translation = Text(r"Translation",font_size=144)
+        self.play(Write(translation))
+        self.wait(2)
+        self.play(FadeOut(translation))
+
+        axes = Axes(x_range=[-2,5,1],y_range=[-2,5,1],x_length=7,y_length=7,axis_config={"include_tip":True},).shift(LEFT*3)
         
-        
+        start_point = axes.c2p(0,0)
+        dot = Dot(point=start_point,color = WHITE)
+        label_xy = MathTex(r"(x, y)").next_to(dot,UL,buff=0.2)
 
+        tx1,ty1 = 3,2
+        end_point_1 = axes.c2p(tx1,ty1)
+        vector_1 = Arrow(start=start_point, end=end_point_1,buff=0)
+        midpoint_1 = interpolate(start_point,end_point_1,alpha=0.6)
+        label_t1 = MathTex(r"\vec{t_x}+\vec{t_y}").next_to(midpoint_1,UL,buff=0.2)
 
-        
+        tx2,ty2 = -2,-3
+        end_point_2 = axes.c2p(tx1 + tx2, ty1 + ty2)
+        vector_2 = Arrow(start=end_point_1,end=end_point_2,buff=0)
+        midpoint_2 = interpolate(end_point_1,end_point_2,alpha=0.5)
+        label_t2 = MathTex(r"\vec{t_x}'+\vec{t_y}'").next_to(midpoint_2,RIGHT,buff=0.2)
+        label_xy1 = MathTex(r"(x', y')").next_to(end_point_1,UR,buff=0.2)
+        label_xy2 = MathTex(r"(x'',y'')").next_to(end_point_2,DR,buff=0.2)
 
+        eq1 = MathTex(
+            r"x' = x + t_x \\"
+            r"y' = y + t_y"
+        ).shift(RIGHT * 3).shift(UP * 2)
+        eq_scalar = MathTex(r"1 = 1").next_to(eq1,DOWN / 2,buff=0.8)
+        eq2 = MathTex(
+            r"x' = 1 \cdot x + 0 \cdot y + t_x \\",
+            r"y' = 0 \cdot x + 1 \cdot y + t_y \\",
+            r"1  = 0 \cdot x + 0 \cdot y + 1"
+        ).move_to(eq1)
 
-        
+        translation_matrix = MathTex(
+            r"\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} =",
+            r"\begin{bmatrix} 1 & 0 & t_x \\ 0 & 1 & t_y \\ 0 & 0 & 1 \end{bmatrix}"
+            r"\begin{bmatrix} x \\ y \\ 1 \end{bmatrix}"
+        ).next_to(eq2,DOWN)
 
+        self.play(Create(axes),Create(dot),Write(label_xy))
+        self.wait(1)
 
+        self.play(Create(vector_1),Write(label_t1),dot.animate.move_to(end_point_1),Transform(label_xy.copy(),label_xy1))
+        self.wait(1)
+        self.play(Create(vector_2),Write(label_t2),dot.animate.move_to(end_point_2),Transform(label_xy1,label_xy2))
+        self.wait(2)
+
+        self.play(Write(eq1))
+        self.wait(2)
+
+        self.play(Write(eq_scalar))
+        self.wait(1)
+        self.play(Transform(VGroup(eq1,eq_scalar),eq2))
+        self.wait(2)
+
+        self.play(Transform(eq2,translation_matrix))
+        self.wait(3)
