@@ -248,3 +248,139 @@ class Translation(Scene):
 
         self.play(Transform(eq2,translation_matrix))
         self.wait(3)
+        
+        self.play(*[FadeOut(mob)for mob in self.mobjects])
+        self.wait(1)
+
+
+        s1 = MathTex(
+            r"S = \begin{bmatrix} s_x & 0 \\ 0 & s_y \end{bmatrix}",
+            font_size = 36
+        ).shift(LEFT*4)
+        r1 = MathTex(
+            r"R = \begin{bmatrix} cos\theta & -sin\theta \\ sin\theta & cos\theta \end{bmatrix}",
+            font_size = 36
+        )
+        t1 = MathTex(
+            r"T = \begin{bmatrix} 1 & 0 & t_x \\ 0 & 1 & t_y \\ 0 & 0 & 1\end{bmatrix}",
+            font_size = 36
+        ).shift(RIGHT*4)
+
+        s2 = MathTex(
+            r"S = \begin{bmatrix} s_x & 0 & 0 & 0 \\ 0 & s_y & 0 & 0 \\ 0 & 0 & s_z & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}",
+            font_size = 36
+        ).shift(LEFT*5)
+
+        rx = MathTex(
+            r"R_x = \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & cos\theta & -sin\theta & 0 \\ 0 & sin\theta & cos\theta & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}",
+            font_size = 36
+        ).shift(UP*2.5)
+        ry = MathTex(
+            r"Ry = \begin{bmatrix} cos\theta & 0 & sin\theta & 0 \\ 0 & 1 & 0 & 0 \\ -sin\theta & 0 & cos\theta & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}",
+            font_size = 36
+        )
+        rz = MathTex(
+            r"R_z = \begin{bmatrix} cos\theta & -sin\theta & 0 & 0 \\ sin\theta & cos\theta & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}",
+            font_size = 36
+        ).shift(DOWN*2.5)
+
+        t2 = MathTex(
+            r"T = \begin{bmatrix} 1 & 0 & 0 & t_x \\ 0 & 1 & 0 & t_y \\ 0 & 0 & 1 & t_z \\ 0 & 0 & 0 & 1\end{bmatrix}",
+            font_size = 36
+        ).shift(RIGHT*5)
+
+        self.play(Write(s1),Write(r1),Write(t1))
+        self.wait(2)
+        self.play(Transform(s1,s2),Transform(r1.copy(),rx),Transform(r1.copy(),rz),Transform(r1,ry),Transform(t1,t2))
+        self.wait(3)
+
+
+
+
+class Conclusion(Scene):
+    def construct(self):   
+        p_xy = MathTex(
+            r"P_{xy} =",
+            r"\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}"
+        ).scale(0.8)
+        p_xy.shift(UP * 2)
+        self.play(Write(p_xy))
+        self.wait(2)
+        
+        projection_formula = MathTex(
+            r"P = R^{-1} P_{xy} R"
+        ).scale(0.9)
+        projection_formula.next_to(p_xy, DOWN, buff=0.5)
+        self.play(Write(projection_formula))
+        self.wait(2)
+        
+        expanded_formula = MathTex(
+            r"P =",
+            r"R^{-1} ",
+            r"\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}",
+            r" R"
+        ).scale(0.8)
+        expanded_formula.next_to(projection_formula, DOWN, buff=0.5)
+        self.play(Write(expanded_formula))
+        self.wait(3)
+        
+        final_projection = MathTex(
+            r"P =",
+            r"\begin{bmatrix} \cdots & \cdots & \cdots & \cdots \\ \cdots & \cdots & \cdots & \cdots \\ \cdots & \cdots & \cdots & \cdots \\ \cdots & \cdots & \cdots & \cdots \end{bmatrix}"
+        ).scale(0.8)
+        final_projection.next_to(expanded_formula, DOWN, buff=0.5)
+        self.play(Transform(expanded_formula, final_projection))
+        self.wait(3)
+        
+class Smooth3DTo2D(ThreeDScene):
+    def construct(self):
+        self.set_camera_orientation(phi=60 * DEGREES, theta=45 * DEGREES)
+        axes = ThreeDAxes()
+        cube = Cube().move_to([0, 0, 0])
+        plane = Square(fill_opacity=0.5, fill_color=BLUE, stroke_color=WHITE)
+        plane.rotate_about_origin(PI/4, UP)
+        plane.rotate_about_origin(PI/6, RIGHT)
+        plane.move_to([0, 0, 0])
+        
+        self.play(Create(axes), Create(cube), )
+        self.wait(2)
+        
+        projection_matrix = np.array([
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 0]
+        ])
+        projected_cube = cube.copy().apply_matrix(projection_matrix)
+        self.play(Transform(cube, projected_cube))
+        self.wait(2)
+        
+        self.move_camera(phi=0 * DEGREES, theta=0 * DEGREES)
+        self.wait(2)
+        
+        self.move_camera(phi=60 * DEGREES, theta=45 * DEGREES)
+        self.play(Transform(cube, Cube().move_to([0, 0, 0])))
+        self.wait(2)
+        
+        r_matrix = np.array([
+            [np.cos(PI/4), 0, -np.sin(PI/4)],
+            [0, 1, 0],
+            [np.sin(PI/4), 0, np.cos(PI/4)]
+        ])
+        self.play(Create(plane))
+        transformed_axes = axes.copy().apply_matrix(r_matrix)
+        transformed_plane = plane.copy().apply_matrix(r_matrix).move_to([0, 0, 0])
+        transformed_cube = cube.copy().apply_matrix(r_matrix)
+        
+        self.play(Transform(axes, transformed_axes),
+                  Transform(plane, transformed_plane),
+                  Transform(cube, transformed_cube))
+        self.wait(2)
+        
+        projection_matrix_xz = np.array([
+            [1, 0, 0],
+            [0, 0, 0],
+            [0, 0, 1]
+        ])
+        projected_cube_custom = transformed_cube.copy().apply_matrix(projection_matrix_xz)
+        self.play(Transform(cube, projected_cube_custom))
+        self.wait(3)
